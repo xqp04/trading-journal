@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jeremiah's Trading Journal</title>
+<style>
+:root{
+  --bg:#0b0f17; --panel:#121826; --panel2:#182033; --line:#26314a; --text:#eef2fa; --muted:#93a0ba;
+  --accent:#ffd60a; --green:#2ee6a6; --red:#ff5468; --blue:#5aa9ff; --radius:14px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+h1,h2,h3{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{display:grid;grid-template-columns:minmax(300px,30%) 1fr;gap:20px;max-width:1500px;margin:0 auto;padding:16px;align-items:start}
+@media(max-width:900px){.wrap{grid-template-columns:1fr}}
+
+/* ---------- RULES ---------- */
+.rules{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;background:#000;border:3px solid var(--accent);border-radius:var(--radius);padding:16px 16px 20px}
+@media(max-width:900px){.rules{position:static;max-height:none}}
+.rules h2{font-size:28px;letter-spacing:.06em;color:var(--accent);text-transform:uppercase;text-align:center;margin-bottom:4px;font-weight:900}
+.rules .sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:12px}
+.rsec{margin-top:16px}
+.rsec h3{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);border-bottom:2px solid #3a3200;padding-bottom:4px;margin-bottom:6px;font-weight:800}
+.rsec ul{list-style:none;margin:0;padding:0}
+.rsec li{font-size:18px;font-weight:800;line-height:1.3;padding:7px 0;border-bottom:1px solid #1c2233}
+.rsec li:last-child{border-bottom:none}
+.hard li{font-size:22px;font-weight:900;background:var(--accent);color:#000;border-radius:10px;margin:8px 0;padding:10px 12px;border:none;text-transform:uppercase;line-height:1.2}
+.steps{counter-reset:s}
+.steps li{counter-increment:s;padding-left:38px;position:relative}
+.steps li::before{content:counter(s);position:absolute;left:0;top:6px;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#000;font-weight:900;text-align:center;line-height:28px;font-size:16px}
+.no li::before{content:"✕ ";color:var(--red);font-weight:900}
+.stop li::before{content:"■ ";color:var(--red)}
+.q{font-size:11px;color:var(--muted);font-weight:600;vertical-align:middle}
+.rfoot{margin-top:14px;font-size:12px;color:var(--muted);text-align:center}
+
+/* ---------- JOURNAL ---------- */
+.top h1{font-size:28px;font-weight:900}
+.top .tag{color:var(--muted);margin:2px 0 14px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px}
+.stat .n{font-size:26px;font-weight:900;line-height:1.1}
+.stat .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+.pos{color:var(--green)} .neg{color:var(--red)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:700;font-size:14px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:#000;border-color:var(--accent);font-size:17px;padding:13px 22px;font-weight:900}
+.btn.danger{color:var(--red)}
+.btn.small{padding:6px 10px;font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:18px}
+.card>h2{font-size:20px;margin-bottom:2px}
+.card>.hint{color:var(--muted);font-size:14px;margin-bottom:12px}
+.card.editing{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,214,10,.25)}
+fieldset{border:1px solid var(--line);border-radius:12px;margin:0 0 14px;padding:12px 14px 14px;min-width:0}
+legend{padding:0 8px;font-weight:800;color:var(--accent);font-size:14px;text-transform:uppercase;letter-spacing:.06em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+label.f{display:block;font-size:14px;font-weight:700;color:#cfd8ea}
+label.f small{display:block;color:var(--muted);font-weight:500}
+input[type=text],input[type=number],input[type=date],select,textarea{width:100%;margin-top:5px;background:#0c1220;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:16px}
+textarea{resize:vertical;min-height:80px}
+textarea.big{min-height:200px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);border-color:transparent}
+.slider{display:flex;align-items:center;gap:12px;margin-top:6px}
+.slider input{flex:1;accent-color:var(--accent);height:30px}
+.slider .val{font-size:30px;font-weight:900;min-width:40px;text-align:center;color:var(--accent)}
+.ends{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.seg{display:flex;gap:0;margin-top:5px}
+.seg label{flex:1;text-align:center;cursor:pointer}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;padding:10px 6px;background:#0c1220;border:1px solid var(--line);font-weight:800}
+.seg label:first-child span{border-radius:10px 0 0 10px}
+.seg label:last-child span{border-radius:0 10px 10px 0}
+.seg input:checked+span{background:var(--accent);color:#000;border-color:var(--accent)}
+.seg input:focus-visible+span{outline:2px solid #fff}
+.seg.plan input[value=yes]:checked+span{background:var(--green);border-color:var(--green)}
+.seg.plan input[value=no]:checked+span{background:var(--red);border-color:var(--red);color:#fff}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:6px 12px}
+.checks label{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:15px;background:#0c1220}
+.checks input{width:20px;height:20px;accent-color:var(--red);margin-top:2px;flex:none}
+.checks label:has(input:checked){border-color:var(--red);background:#2a1017}
+.note{font-size:13px;margin-top:8px;color:var(--accent);min-height:1em}
+.shot img{max-width:100%;border-radius:10px;border:1px solid var(--line);margin-top:10px;display:block}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:6px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--accent);color:#000;font-weight:800;padding:10px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:20;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+.toast.err{background:var(--red);color:#fff}
+
+/* list */
+.entry{background:var(--panel2);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.entry.open{border-color:var(--blue)}
+.ehead{display:flex;gap:10px;align-items:center;padding:12px;cursor:pointer;flex-wrap:wrap}
+.ehead .d{font-weight:900;min-width:110px}
+.badge{font-size:12px;font-weight:800;padding:3px 9px;border-radius:999px;background:#0c1220;border:1px solid var(--line)}
+.badge.yes{color:var(--green);border-color:var(--green)}
+.badge.no{color:var(--red);border-color:var(--red)}
+.ehead .pnl{margin-left:auto;font-weight:900;font-size:18px}
+.ebody{padding:0 14px 14px;border-top:1px solid var(--line);display:none}
+.entry.open .ebody{display:block}
+.ebody h4{margin:12px 0 2px;font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
+.ebody p{margin:0;white-space:pre-wrap;word-wrap:break-word}
+.ebody img{max-width:100%;border-radius:10px;margin-top:10px;border:1px solid var(--line)}
+.brk{color:var(--red);font-weight:700}
+.empty{color:var(--muted);text-align:center;padding:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ================= LEFT: RULES ================= -->
+<aside class="rules" aria-label="My rules">
+  <h2>My Rules</h2>
+  <div class="sub">Read these before every session.</div>
+
+  <div class="rsec hard"><h3>The 3 hard rules</h3>
+    <ul>
+      <li>1. Trend only. No counter-trend. Ever.</li>
+      <li>2. Max 2 trades a day.</li>
+      <li>3. Max loss $400 a day. Then I'm done.</li>
+    </ul>
+  </div>
+
+  <div class="rsec"><h3>Risk</h3>
+    <ul>
+      <li>Risk $150 max per trade.</li>
+      <li>Minimum 2R to the final target.</li>
+      <li>Stop 75 pts or less. Bigger = skip.</li>
+      <li>Max 4 MNQ contracts.</li>
+      <li>Never move a stop further away.</li>
+      <li>Never add to a loser.</li>
+      <li>After a -$300 day, next day is half size.</li>
+    </ul>
+  </div>
+
+  <div class="rsec"><h3>Trade window</h3>
+    <ul>
+      <li>9:45 to 11:00 AM ET only.</li>
+      <li>Cancel unfilled limits at 11:00. Flat by 11:00 <span class="q">(?)</span></li>
+    </ul>
+  </div>
+
+  <div class="rsec"><h3>Setup steps, in order</h3>
+    <ul class="steps">
+      <li>Mark 4H high and low before 9:45.</li>
+      <li>Trend check on 1H at 9:40. Up, down or range.</li>
+      <li>Sweep into an HTF level.</li>
+      <li>5m BOS (candle body close).</li>
+      <li>Take the first FVG only.</li>
+      <li>Limit entry at 70.5% OTE inside it.</li>
+      <li>Stop 2 pts beyond the sweep.</li>
+    </ul>
+  </div>
+
+  <div class="rsec"><h3>No-trade list</h3>
+    <ul class="no">
+      <li>Any checklist item is a NO.</li>
+      <li>Trend is RANGE.</li>
+      <li>Sweep goes against the trend.</li>
+      <li>Distracted, tired or bill pressure.</li>
+      <li>Big news at 10:00: skip 9:55 to 10:10 <span class="q">(?)</span></li>
+      <li>4H range too small for 2R.</li>
+      <li>Sweep candle held outside = a real break.</li>
+      <li>Revenge or "make it back" feeling.</li>
+    </ul>
+  </div>
+
+  <div class="rsec"><h3>Stop for the day</h3>
+    <ul class="stop">
+      <li>Down $400? Close the platform.</li>
+      <li>2 trades taken? Done.</li>
+      <li>Up $500? Done.</li>
+      <li>2 rule breaks? Done.</li>
+      <li>No journal entry = a rule break.</li>
+      <li>Second trade after a rule break? Never.</li>
+    </ul>
+  </div>
+  <div class="rfoot">From Rulebook v2.1 (draft). (?) = default to confirm.</div>
+</aside>
+
+<!-- ================= RIGHT: JOURNAL ================= -->
+<main>
+  <div class="top">
+    <h1>Trading Journal</h1>
+    <div class="tag">No judgment, just honest. Every entry makes me better.</div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tools">
+    <button class="btn" id="exJson" type="button">⬇ Export JSON</button>
+    <button class="btn" id="exCsv" type="button">⬇ Export CSV</button>
+    <button class="btn" id="imJson" type="button">⬆ Import JSON (backup)</button>
+    <input type="file" id="imFile" accept="application/json,.json" hidden>
+  </div>
+
+  <form class="card" id="form" autocomplete="off">
+    <h2 id="formTitle">New entry</h2>
+    <div class="hint" id="formHint">One entry per trade (or one per day if you didn't trade). Be real. This is just for you.</div>
+
+    <fieldset><legend>Before the session</legend>
+      <div class="grid">
+        <label class="f">Date<input type="date" id="date" required></label>
+      </div>
+      <label class="f" style="margin-top:12px">How I felt before the session
+        <small>1 = wound up, 5 = calm. Under 3? Rulebook says no trade.</small>
+        <div class="slider"><span class="ends">1</span><input type="range" id="calm" min="1" max="5" step="1" value="3"><span class="ends">5</span><span class="val" id="calmVal">3</span></div>
+      </label>
+      <label class="f" style="margin-top:12px">Vent before the session <small>Get it out of your head.</small>
+        <textarea id="ventBefore" placeholder="Bills, sleep, mood, anything on my mind..."></textarea></label>
+    </fieldset>
+
+    <fieldset><legend>The trade</legend>
+      <div class="grid">
+        <label class="f">Direction
+          <select id="direction"><option value="">—</option><option>Long</option><option>Short</option><option>No trade</option></select></label>
+        <label class="f">Trend (1H)
+          <select id="trend"><option value="">—</option><option>Up</option><option>Down</option><option>Range</option></select></label>
+        <label class="f">Trade # today
+          <select id="tradeNum"><option value="">—</option><option>1</option><option>2</option><option>3+</option></select></label>
+        <label class="f">Entry price<input type="number" id="entry" step="any" inputmode="decimal"></label>
+        <label class="f">Exit price<input type="number" id="exit" step="any" inputmode="decimal"></label>
+        <label class="f">P&amp;L ($)<input type="number" id="pnl" step="any" inputmode="decimal" placeholder="-150"></label>
+        <label class="f">R multiple<input type="number" id="r" step="any" inputmode="decimal" placeholder="-1 or 2.3"></label>
+      </div>
+      <div class="note" id="trendNote"></div>
+      <label class="f" style="margin-top:12px">Why I took this trade
+        <textarea id="why"></textarea></label>
+      <label class="f" style="margin-top:12px">What I could have done differently
+        <textarea id="diff"></textarea></label>
+    </fieldset>
+
+    <fieldset><legend>Did I follow my plan?</legend>
+      <div class="seg plan" id="planSeg" style="max-width:320px">
+        <label><input type="radio" name="plan" value="yes" checked><span>✔ Yes</span></label>
+        <label><input type="radio" name="plan" value="no"><span>✘ No</span></label>
+      </div>
+      <label class="f" style="margin-top:14px">Rules I broke <small>Tick any that apply. Honest is good.</small></label>
+      <div class="checks" id="broke" style="margin-top:6px"></div>
+    </fieldset>
+
+    <fieldset><legend>Vent about today</legend>
+      <label class="f">Free write <small>Wins, losses, frustration, whatever. Nobody's grading this.</small>
+        <textarea class="big" id="vent"></textarea></label>
+      <div class="grid" style="margin-top:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+        <label class="f">One thing I did well<input type="text" id="well"></label>
+        <label class="f">One thing to fix<input type="text" id="fix"></label>
+      </div>
+    </fieldset>
+
+    <fieldset class="shot"><legend>Screenshot</legend>
+      <input type="file" id="shotFile" accept="image/*">
+      <div class="hint" style="margin:6px 0 0;color:var(--muted);font-size:13px">Saved inside this file's storage, resized to 800px wide.</div>
+      <img id="shotPrev" alt="Screenshot preview" hidden>
+      <button type="button" class="btn small danger" id="shotClear" hidden style="margin-top:8px">Remove screenshot</button>
+    </fieldset>
+
+    <div class="actions">
+      <button class="btn primary" type="submit" id="saveBtn">Save entry</button>
+      <button class="btn" type="button" id="cancelBtn" hidden>Cancel edit</button>
+      <button class="btn" type="button" id="resetBtn">Clear form</button>
+    </div>
+  </form>
+
+  <div class="card">
+    <h2>Past entries</h2>
+    <div class="hint">Newest first. Tap one to open it.</div>
+    <div id="list"></div>
+  </div>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+var KEY="jeremiah-trading-journal-v1";
+var RULES_BROKEN=[
+ ["counter","Traded against the trend, or on a RANGE day"],
+ ["max2","Took more than 2 trades"],
+ ["loss400","Kept trading past -$400 for the day"],
+ ["risk150","Risked more than $150"],
+ ["min2r","Took a trade under 2R"],
+ ["stop75","Stop bigger than 75 pts"],
+ ["window","Traded outside 9:45-11:00"],
+ ["steps","Skipped a setup step (sweep, BOS, first FVG, 70.5% OTE)"],
+ ["notrade","Traded something on the no-trade list"],
+ ["stopmove","Moved my stop further away"],
+ ["addloser","Added to a loser"],
+ ["revenge","Revenge / \"make it back\" trade"],
+ ["profit500","Kept trading after +$500"],
+ ["nojournal","Skipped the journal or screenshot"]
+];
+var $=function(id){return document.getElementById(id)};
+var entries=[], editingId=null, shot="", openIds={};
+
+function load(){
+  try{var v=JSON.parse(localStorage.getItem(KEY)||"[]");entries=Array.isArray(v)?v:[];}catch(e){entries=[];}
+}
+function persist(){
+  try{localStorage.setItem(KEY,JSON.stringify(entries));return true;}
+  catch(e){toast("Storage is full. Remove a screenshot or export a backup.",true);return false;}
+}
+function toast(msg,err){
+  var t=$("toast");t.textContent=msg;t.className="toast show"+(err?" err":"");
+  clearTimeout(toast.h);toast.h=setTimeout(function(){t.className="toast"},2800);
+}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function today(){var d=new Date();return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+function money(n){var s=Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2});return(n<0?"-$":"$")+s}
+function num(v){return v===""||v==null||isNaN(parseFloat(v))?null:parseFloat(v)}
+function fmtDate(s){var p=(s||"").split("-");if(p.length!==3)return s||"";var d=new Date(+p[0],+p[1]-1,+p[2]);return d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric",year:"numeric"})}
+function uid(){return "e"+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+
+/* build rules-broken checkboxes */
+$("broke").innerHTML=RULES_BROKEN.map(function(r){return '<label><input type="checkbox" name="broke" value="'+r[0]+'"><span>'+esc(r[1])+'</span></label>'}).join("");
+function brokenLabel(k){for(var i=0;i<RULES_BROKEN.length;i++)if(RULES_BROKEN[i][0]===k)return RULES_BROKEN[i][1];return k}
+
+/* ---------- stats ---------- */
+function dayGroups(){
+  var g={};entries.forEach(function(e){var d=e.date||"";(g[d]=g[d]||[]).push(e)});return g;
+}
+function renderStats(){
+  var n=entries.length;
+  var yes=entries.filter(function(e){return e.plan==="yes"}).length;
+  var pct=n?Math.round(yes/n*100)+"%":"–";
+  var total=entries.reduce(function(a,e){return a+(num(e.pnl)||0)},0);
+  var g=dayGroups(), dates=Object.keys(g).sort().reverse(), streak=0;
+  for(var i=0;i<dates.length;i++){
+    if(g[dates[i]].every(function(e){return e.plan==="yes"}))streak++;else break;
+  }
+  var bad=dates.filter(function(d){return g[d].reduce(function(a,e){return a+(num(e.pnl)||0)},0)<=-400}).length;
+  var cells=[
+    [n,"Entries",""],
+    [pct,"Plan followed",n&&yes/n>=.9?"pos":""],
+    [n?money(total):"$0","Total P&L",total>0?"pos":total<0?"neg":""],
+    [streak,"Plan-followed day streak",streak>0?"pos":""],
+    [bad,"Days at/over $400 loss",bad?"neg":""]
+  ];
+  $("stats").innerHTML=cells.map(function(c){return '<div class="stat"><div class="n '+c[2]+'">'+esc(c[0])+'</div><div class="l">'+c[1]+'</div></div>'}).join("");
+}
+
+/* ---------- list ---------- */
+function renderList(){
+  var el=$("list");
+  if(!entries.length){el.innerHTML='<div class="empty">No entries yet. Your first one is the hardest. Start above.</div>';return;}
+  var sorted=entries.slice().sort(function(a,b){return (b.date||"").localeCompare(a.date||"")||(b.created||0)-(a.created||0)});
+  el.innerHTML=sorted.map(function(e){
+    var p=num(e.pnl),open=openIds[e.id];
+    var h='<div class="entry'+(open?" open":"")+'" data-id="'+e.id+'">'+
+      '<div class="ehead" data-act="toggle"><span class="d">'+esc(fmtDate(e.date))+'</span>'+
+      (e.direction?'<span class="badge">'+esc(e.direction)+'</span>':'')+
+      (e.trend?'<span class="badge">Trend: '+esc(e.trend)+'</span>':'')+
+      (e.tradeNum?'<span class="badge">Trade '+esc(e.tradeNum)+'</span>':'')+
+      '<span class="badge '+(e.plan==="yes"?"yes":"no")+'">Plan: '+(e.plan==="yes"?"Yes":"No")+'</span>'+
+      (p!=null?'<span class="pnl '+(p>0?"pos":p<0?"neg":"")+'">'+money(p)+'</span>':'<span class="pnl"></span>')+'</div>'+
+      '<div class="ebody">';
+    function sec(t,v){return v?'<h4>'+t+'</h4><p>'+esc(v)+'</p>':''}
+    h+='<h4>Numbers</h4><p>Calm: '+esc(e.calm||"–")+'/5 · Entry: '+esc(e.entry==null?"–":e.entry)+' · Exit: '+esc(e.exit==null?"–":e.exit)+' · R: '+esc(e.r==null?"–":e.r)+'</p>';
+    h+=sec("Vent before session",e.ventBefore)+sec("Why I took this trade",e.why)+sec("What I could have done differently",e.diff);
+    if(e.broke&&e.broke.length)h+='<h4>Rules I broke</h4><p class="brk">'+e.broke.map(function(k){return "• "+esc(brokenLabel(k))}).join("<br>")+'</p>';
+    h+=sec("Vent about today",e.vent)+sec("Did well",e.well)+sec("Fix",e.fix);
+    if(e.shot)h+='<img src="'+e.shot+'" alt="Trade screenshot">';
+    h+='<div class="actions" style="margin-top:14px"><button class="btn small" data-act="edit" type="button">✎ Edit</button><button class="btn small danger" data-act="del" type="button">🗑 Delete</button></div>';
+    return h+'</div></div>';
+  }).join("");
+}
+$("list").addEventListener("click",function(ev){
+  var t=ev.target.closest("[data-act]");if(!t)return;
+  var card=t.closest(".entry"),id=card.getAttribute("data-id"),act=t.getAttribute("data-act");
+  if(act==="toggle"){if(openIds[id])delete openIds[id];else openIds[id]=1;renderList();}
+  else if(act==="edit"){startEdit(id)}
+  else if(act==="del"){
+    if(confirm("Delete this entry? This can't be undone.")){
+      entries=entries.filter(function(e){return e.id!==id});
+      if(editingId===id)resetForm();
+      persist();renderAll();toast("Entry deleted");
+    }
+  }
+});
+
+/* ---------- form ---------- */
+function planVal(){return document.querySelector('input[name=plan]:checked').value}
+function setPlan(v){document.querySelector('input[name=plan][value='+v+']').checked=true}
+function resetForm(){
+  editingId=null;$("form").reset();$("date").value=today();$("calm").value=3;$("calmVal").textContent="3";
+  setPlan("yes");shot="";updShot();$("formTitle").textContent="New entry";
+  $("form").classList.remove("editing");$("saveBtn").textContent="Save entry";$("cancelBtn").hidden=true;$("trendNote").textContent="";
+}
+function updShot(){
+  $("shotPrev").hidden=!shot;$("shotClear").hidden=!shot;if(shot)$("shotPrev").src=shot;else $("shotPrev").removeAttribute("src");
+}
+function startEdit(id){
+  var e=entries.filter(function(x){return x.id===id})[0];if(!e)return;
+  resetForm();editingId=id;
+  $("date").value=e.date||today();$("calm").value=e.calm||3;$("calmVal").textContent=e.calm||3;
+  $("ventBefore").value=e.ventBefore||"";$("direction").value=e.direction||"";$("trend").value=e.trend||"";$("tradeNum").value=e.tradeNum||"";
+  $("entry").value=e.entry==null?"":e.entry;$("exit").value=e.exit==null?"":e.exit;$("pnl").value=e.pnl==null?"":e.pnl;$("r").value=e.r==null?"":e.r;
+  $("why").value=e.why||"";$("diff").value=e.diff||"";setPlan(e.plan==="no"?"no":"yes");
+  Array.prototype.forEach.call(document.getElementsByName("broke"),function(c){c.checked=(e.broke||[]).indexOf(c.value)>-1});
+  $("vent").value=e.vent||"";$("well").value=e.well||"";$("fix").value=e.fix||"";
+  shot=e.shot||"";updShot();
+  $("formTitle").textContent="Editing entry from "+fmtDate(e.date);$("form").classList.add("editing");
+  $("saveBtn").textContent="Save changes";$("cancelBtn").hidden=false;checkTrend();
+  $("form").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function checkTrend(){
+  var d=$("direction").value,t=$("trend").value,m="";
+  if(t==="Range"&&d&&d!=="No trade")m="Trend is RANGE: the rulebook says no trade today. Worth noting under rules broken.";
+  else if((d==="Long"&&t==="Down")||(d==="Short"&&t==="Up"))m="That direction goes against the trend. Trend only is rule #1. Be honest below.";
+  $("trendNote").textContent=m;
+}
+$("direction").addEventListener("change",checkTrend);$("trend").addEventListener("change",checkTrend);
+$("calm").addEventListener("input",function(){$("calmVal").textContent=this.value});
+Array.prototype.forEach.call(document.getElementsByName("broke"),function(c){
+  c.addEventListener("change",function(){if(this.checked)setPlan("no")});
+});
+$("resetBtn").addEventListener("click",function(){resetForm()});
+$("cancelBtn").addEventListener("click",function(){resetForm();toast("Edit cancelled")});
+$("shotClear").addEventListener("click",function(){shot="";$("shotFile").value="";updShot()});
+$("shotFile").addEventListener("change",function(){
+  var f=this.files&&this.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(){
+    var img=new Image();
+    img.onload=function(){
+      var w=img.naturalWidth,h=img.naturalHeight,max=800;
+      if(w>max){h=Math.round(h*max/w);w=max}
+      var c=document.createElement("canvas");c.width=w;c.height=h;
+      var x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);
+      shot=c.toDataURL("image/jpeg",0.72);updShot();
+    };
+    img.onerror=function(){toast("Couldn't read that image",true)};
+    img.src=rd.result;
+  };
+  rd.readAsDataURL(f);
+});
+$("form").addEventListener("submit",function(ev){
+  ev.preventDefault();
+  var broke=Array.prototype.filter.call(document.getElementsByName("broke"),function(c){return c.checked}).map(function(c){return c.value});
+  var data={
+    date:$("date").value||today(),calm:parseInt($("calm").value,10),ventBefore:$("ventBefore").value.trim(),
+    direction:$("direction").value,trend:$("trend").value,tradeNum:$("tradeNum").value,
+    entry:num($("entry").value),exit:num($("exit").value),pnl:num($("pnl").value),r:num($("r").value),
+    why:$("why").value.trim(),diff:$("diff").value.trim(),plan:planVal(),broke:broke,
+    vent:$("vent").value.trim(),well:$("well").value.trim(),fix:$("fix").value.trim(),shot:shot
+  };
+  var backup=entries.slice(),id;
+  if(editingId){
+    entries=entries.map(function(e){if(e.id===editingId){id=e.id;data.id=e.id;data.created=e.created;data.updated=Date.now();return data}return e});
+  }else{data.id=id=uid();data.created=Date.now();entries.push(data)}
+  if(!persist()){entries=backup;return}
+  var wasEdit=!!editingId;
+  openIds[id]=1;resetForm();renderAll();toast(wasEdit?"Changes saved":"Entry saved. Nice work showing up.");
+});
+
+/* ---------- export / import ---------- */
+function download(name,text,type){
+  var b=new Blob([text],{type:type}),a=document.createElement("a");
+  a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500);
+}
+$("exJson").addEventListener("click",function(){
+  if(!entries.length){toast("Nothing to export yet");return}
+  download("trading-journal-"+today()+".json",JSON.stringify({app:"trading-journal",version:1,exported:new Date().toISOString(),entries:entries},null,2),"application/json");
+});
+$("exCsv").addEventListener("click",function(){
+  if(!entries.length){toast("Nothing to export yet");return}
+  var cols=["date","tradeNum","direction","trend","entry","exit","pnl","r","calm","plan","broke","ventBefore","why","diff","vent","well","fix","hasScreenshot"];
+  function q(v){v=v==null?"":String(v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+  var rows=entries.slice().sort(function(a,b){return (a.date||"").localeCompare(b.date||"")}).map(function(e){
+    return cols.map(function(c){
+      if(c==="broke")return q((e.broke||[]).map(brokenLabel).join("; "));
+      if(c==="hasScreenshot")return e.shot?"yes":"no";
+      return q(e[c]);
+    }).join(",");
+  });
+  download("trading-journal-"+today()+".csv","\ufeff"+cols.join(",")+"\r\n"+rows.join("\r\n"),"text/csv");
+});
+$("imJson").addEventListener("click",function(){$("imFile").click()});
+$("imFile").addEventListener("change",function(){
+  var f=this.files&&this.files[0],inp=this;if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(){
+    try{
+      var v=JSON.parse(rd.result);if(v&&!Array.isArray(v))v=v.entries;
+      if(!Array.isArray(v))throw 0;
+      var have={};entries.forEach(function(e){have[e.id]=1});var added=0;
+      var backup=entries.slice();
+      v.forEach(function(e){
+        if(!e||typeof e!=="object"||!e.date)return;
+        if(!e.id)e.id=uid();
+        if(have[e.id])return;
+        if(!e.created)e.created=Date.now();
+        have[e.id]=1;entries.push(e);added++;
+      });
+      if(!persist()){entries=backup;return}
+      renderAll();toast("Imported "+added+" new "+(added===1?"entry":"entries"));
+    }catch(err){toast("That file doesn't look like a journal backup",true)}
+    inp.value="";
+  };
+  rd.readAsText(f);
+});
+
+function renderAll(){renderStats();renderList()}
+load();resetForm();renderAll();
+})();
+</script>
+</body>
+</html>
